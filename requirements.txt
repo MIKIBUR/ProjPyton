@@ -3,3 +3,5 @@ plotly
 dash
 pandas
 redis
+cookiecutter
+virtualenv

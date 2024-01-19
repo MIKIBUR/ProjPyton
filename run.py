@@ -1,5 +1,6 @@
 import json
 import redis
+import ass
 from flask import Flask, jsonify
 import threading
 import requests
@@ -69,7 +70,15 @@ def get_records_by_id(record_id):
 # Dash layout
 dash_app.layout = html.Div(children=[
     html.H1(id='nameAndYear'),
-
+    ass.FootComponent(
+        id='feetComponent',
+        value1='1111',
+        value2='2222',
+        value3='3333',
+        value4='4444',
+        value5='5555',
+        value6='6666'
+    ),
     dcc.Graph(id='line-plot-1'),
     dcc.Graph(id='line-plot-2'),
 
@@ -84,7 +93,13 @@ dash_app.layout = html.Div(children=[
 @dash_app.callback(
     [Output('nameAndYear', 'children'),
      Output('line-plot-1', 'figure'),
-     Output('line-plot-2', 'figure')],
+     Output('line-plot-2', 'figure'),
+     Output('feetComponent', 'value1'),
+     Output('feetComponent', 'value2'),
+     Output('feetComponent', 'value3'),
+     Output('feetComponent', 'value4'),
+     Output('feetComponent', 'value5'),
+     Output('feetComponent', 'value6')],
     [Input('interval-component', 'n_intervals')]
 )
 def update_data(n_intervals):
@@ -95,13 +110,13 @@ def update_data(n_intervals):
     firstname = record.get("firstname")
     lastname = record.get("lastname")
 
-    time_series_data_1 = [log(value.get("trace").get("sensors")[0].get("value")) for value in records]
-    time_series_data_2 = [log(value.get("trace").get("sensors")[1].get("value")) for value in records]
-    time_series_data_3 = [log(value.get("trace").get("sensors")[2].get("value")) for value in records]
+    time_series_data_1 = [value.get("trace").get("sensors")[0].get("value") for value in records]
+    time_series_data_2 = [value.get("trace").get("sensors")[1].get("value") for value in records]
+    time_series_data_3 = [value.get("trace").get("sensors")[2].get("value") for value in records]
 
-    time_series_data_4 = [log(value.get("trace").get("sensors")[3].get("value")) for value in records]
-    time_series_data_5 = [log(value.get("trace").get("sensors")[4].get("value")) for value in records]
-    time_series_data_6 = [log(value.get("trace").get("sensors")[5].get("value")) for value in records]
+    time_series_data_4 = [value.get("trace").get("sensors")[3].get("value") for value in records]
+    time_series_data_5 = [value.get("trace").get("sensors")[4].get("value") for value in records]
+    time_series_data_6 = [value.get("trace").get("sensors")[5].get("value") for value in records]
 
     # Create traces for line plots
     trace1 = dict(x=list(range(len(time_series_data_1))), y=time_series_data_1[::-1], mode='lines', name='Line 1')
@@ -116,7 +131,7 @@ def update_data(n_intervals):
     figure1 = {'data': [trace1, trace2, trace3], 'layout': {'title': 'Line Plot 1', 'yaxis_type': 'log'}}
     figure2 = {'data': [trace4, trace5, trace6], 'layout': {'title': 'Line Plot 2', 'yaxis_type': 'log'}}
 
-    return firstname + ' ' + lastname + ' ' + birthdate, figure1, figure2
+    return firstname + ' ' + lastname + ' ' + birthdate, figure1, figure2, time_series_data_1[0], time_series_data_2[0], time_series_data_3[0], time_series_data_4[0], time_series_data_5[0], time_series_data_6[0]
 
 def get_records(record_id):
     records = get_records_by_id(record_id)
