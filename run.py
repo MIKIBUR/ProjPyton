@@ -104,13 +104,13 @@ def update_data(n_intervals):
     time_series_data_6 = [log(value.get("trace").get("sensors")[5].get("value")) for value in records]
 
     # Create traces for line plots
-    trace1 = dict(x=list(range(len(time_series_data_1))), y=time_series_data_1, mode='lines', name='Line 1')
-    trace2 = dict(x=list(range(len(time_series_data_2))), y=time_series_data_2, mode='lines', name='Line 2')
-    trace3 = dict(x=list(range(len(time_series_data_3))), y=time_series_data_3, mode='lines', name='Line 3')
+    trace1 = dict(x=list(range(len(time_series_data_1))), y=time_series_data_1[::-1], mode='lines', name='Line 1')
+    trace2 = dict(x=list(range(len(time_series_data_2))), y=time_series_data_2[::-1], mode='lines', name='Line 2')
+    trace3 = dict(x=list(range(len(time_series_data_3))), y=time_series_data_3[::-1], mode='lines', name='Line 3')
 
-    trace4 = dict(x=list(range(len(time_series_data_4))), y=time_series_data_4, mode='lines', name='Line 4')
-    trace5 = dict(x=list(range(len(time_series_data_5))), y=time_series_data_5, mode='lines', name='Line 5')
-    trace6 = dict(x=list(range(len(time_series_data_6))), y=time_series_data_6, mode='lines', name='Line 6')
+    trace4 = dict(x=list(range(len(time_series_data_4))), y=time_series_data_4[::-1], mode='lines', name='Line 4')
+    trace5 = dict(x=list(range(len(time_series_data_5))), y=time_series_data_5[::-1], mode='lines', name='Line 5')
+    trace6 = dict(x=list(range(len(time_series_data_6))), y=time_series_data_6[::-1], mode='lines', name='Line 6')
 
     # Create figures for line plots
     figure1 = {'data': [trace1, trace2, trace3], 'layout': {'title': 'Line Plot 1', 'yaxis_type': 'log'}}
