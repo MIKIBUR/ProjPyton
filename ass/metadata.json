@@ -18,12 +18,26 @@
         "required": false,
         "description": "The value displayed in the input."
       },
+      "value1anomaly": {
+        "type": {
+          "name": "bool"
+        },
+        "required": false,
+        "description": "Is value annomaly."
+      },
       "value2": {
         "type": {
           "name": "string"
         },
         "required": false,
         "description": "The value displayed in the input."
+      },
+      "value2anomaly": {
+        "type": {
+          "name": "bool"
+        },
+        "required": false,
+        "description": "Is value annomaly."
       },
       "value3": {
         "type": {
@@ -32,12 +46,26 @@
         "required": false,
         "description": "The value displayed in the input."
       },
+      "value3anomaly": {
+        "type": {
+          "name": "bool"
+        },
+        "required": false,
+        "description": "Is value annomaly."
+      },
       "value4": {
         "type": {
           "name": "string"
         },
         "required": false,
         "description": "The value displayed in the input."
+      },
+      "value4anomaly": {
+        "type": {
+          "name": "bool"
+        },
+        "required": false,
+        "description": "Is value annomaly."
       },
       "value5": {
         "type": {
@@ -46,12 +74,26 @@
         "required": false,
         "description": "The value displayed in the input."
       },
+      "value5anomaly": {
+        "type": {
+          "name": "bool"
+        },
+        "required": false,
+        "description": "Is value annomaly."
+      },
       "value6": {
         "type": {
           "name": "string"
         },
         "required": false,
         "description": "The value displayed in the input."
+      },
+      "value6anomaly": {
+        "type": {
+          "name": "bool"
+        },
+        "required": false,
+        "description": "Is value annomaly."
       }
     }
   }
