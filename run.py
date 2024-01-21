@@ -2,22 +2,18 @@ import json
 import redis
 import ass
 import sys
-from flask import Flask, jsonify
+from flask import Flask
 import threading
 import requests
 import time
-from dash.dependencies import Input, Output, State
+from dash.dependencies import Input, Output
 from dash import Dash, dcc, html, Output, Input
-import plotly.express as px
-import pandas as pd
-import random
-import math
 
 app = Flask(__name__)
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 redis_client.flushdb()
 epochTime = time.time()
-MAX_RECORDS = 30
+MAX_RECORDS = 600
 MAX_IDS = 6
 records_copy = []
 redBoxes = [[[]for _ in range(6)] for _ in range(6)]
@@ -60,16 +56,16 @@ def save_record_to_queue(record_id, data):
     # Trim the list to the maximum allowed records
     redis_client.ltrim(key, 0, MAX_RECORDS - 1)
 
-@app.route('/')
-def index():
-    return 'Flask app running!'
-
 def get_records_by_id(record_id):
     key = f'queue:{record_id}'
     records = redis_client.lrange(key, 0, MAX_RECORDS - 1)
 
     # Decode the JSON strings to Python objects, skipping empty strings
     return [json.loads(record) for record in records if record]
+
+def get_records(record_id):
+    records = get_records_by_id(record_id)
+    return records
 
 # Dash layout
 dash_app.layout = html.Div(children=[
@@ -122,7 +118,7 @@ dash_app.layout = html.Div(children=[
 
     dcc.Interval(
         id='interval-component',
-        interval=1*1000,  # in milliseconds
+        interval=1*1000,
         n_intervals=0
     ),
     html.Div([
@@ -164,7 +160,6 @@ dash_app.layout = html.Div(children=[
      Output('feetComponent', 'value6anomaly')],
     [Input('interval-component', 'n_intervals'),
      Input('radio-items', 'value')]
-
 )
 def update_data(n_intervals, radio_value):
     global records_copy
@@ -199,20 +194,9 @@ def update_data(n_intervals, radio_value):
         records_copy = records 
         first_last_name = firstname + ' ' + lastname + ' ' + birthdate
         tupl = (first_last_name, figures[0], figures[1], figures[2], figures[3], figures[4], figures[5],  time_series_data[0][0], time_series_data[1][0], time_series_data[2][0], time_series_data[3][0], time_series_data[4][0], time_series_data[5][0],  time_series_anomalies[0][0], time_series_anomalies[1][0], time_series_anomalies[2][0], time_series_anomalies[3][0], time_series_anomalies[4][0], time_series_anomalies[5][0])
-        
-        # for h in range(0,6):
-        #     for s in range(0,6):
-        #         print(time_series_anomalies[h][s])
-        #         sys.stdout.flush()
-        #         print(redBoxes[patient_number][h])
-        #         sys.stdout.flush()
         return tupl
     else:
         return None
-    
-def get_records(record_id):
-    records = get_records_by_id(record_id)
-    return records
 
 if __name__ == '__main__':
     # Start the async request thread
