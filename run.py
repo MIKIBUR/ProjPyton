@@ -17,10 +17,10 @@ app = Flask(__name__)
 redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
 redis_client.flushdb()
 epochTime = time.time()
-MAX_RECORDS = 40
+MAX_RECORDS = 30
 MAX_IDS = 6
 records_copy = []
-redBoxes = [[{'type': 'rect', 'x0': 20, 'x1': 25, 'y0': 0, 'y1': 1050, 'fillcolor': 'rgba(255, 0, 0, 0.2)', 'line': {'width': 0}},] for _ in range(6)]
+redBoxes = [[[]for _ in range(6)] for _ in range(6)]
 
 # Initialize Dash app
 dash_app = Dash(__name__, server=app)
@@ -32,7 +32,7 @@ def async_request():
         try:
             for i in range(1,7):
                 url = 'http://tesla.iem.pw.edu.pl:9080/v2/monitor/'+str(i)
-                response = requests.get(url)
+                response = requests.get(url, timeout=1)
                 data = response.json()
 
                 # Extract ID from JSON
@@ -42,7 +42,8 @@ def async_request():
                 save_record_to_queue(record_id, data)
 
         except Exception as e:
-            pass
+            print('Blad pobierania danych')
+            sys.stdout.flush()
 
         # Sleep for 1 second before making the next request
         loopEnd = time.time()
@@ -85,9 +86,18 @@ dash_app.layout = html.Div(children=[
                 {'label': 'Bartosz Moskalski', 'value': 6}
             ],
             value=1,
-            style={'display': 'flex', 'flexDirection': 'row', 'justifyContent': 'center', 'alignItems': 'center'}
+            style={'display': 'flex', 'flexDirection': 'row', 'justifyContent': 'center', 'alignItems': 'center', 'width':'70%', 'fontWeight':'15px'}
         )
-    ],style={'display': 'flex', 'flexDirection': 'row'}),
+    ],style={'display': 'flex',
+            'flexDirection': 'row',
+            'background': '#333',
+            'color': '#fff',
+            'padding': '20px',
+            'borderRadius': '15px',
+            'margin': '0px 0px 10px 0px',
+            'alignItems': 'center',
+            'justifyContent': 'space-between',
+            'boxShadow': '0 2px 4px rgba(0, 0, 0, 0.1)'}),
     ass.FootComponent(
         id='feetComponent',
         value1='1111',
@@ -114,7 +124,21 @@ dash_app.layout = html.Div(children=[
         id='interval-component',
         interval=1*1000,  # in milliseconds
         n_intervals=0
-    )
+    ),
+    html.Div([
+        html.P("© 2024 Politechnika Warszawska. All rights reserved.", style={
+            'color': '#fff',
+            'padding': '10px',
+            'textAlign': 'center',
+            'margin': '0'
+        }),
+        html.P("Authors: Mateusz Charczuk, Mikołaj Burdzy", style={
+            'color': '#fff',
+            'padding': '10px',
+            'textAlign': 'center',
+            'margin': '0'
+        })
+    ], style={'padding': '20px', 'backgroundColor': '#333'})
 ])
 
 # Define callback to update data every second
@@ -144,8 +168,8 @@ dash_app.layout = html.Div(children=[
 )
 def update_data(n_intervals, radio_value):
     global records_copy
-    patient_number = radio_value
-    records = get_records(patient_number)
+    patient_number = radio_value-1
+    records = get_records(patient_number+1)
     isIsodErr = False
     if records == records_copy:
         isIsodErr = True
@@ -161,30 +185,27 @@ def update_data(n_intervals, radio_value):
         traces = [dict() for _ in range(6)]
         figures = [dict() for _ in range(6)]
         
-        for i in range(0,6):
-                # [{'type': 'rect', 'x0': 2, 'x1': 4, 'y0': 0, 'y1': 1050, 'fillcolor': 'rgba(255, 0, 0, 0.2)', 'line': {'width': 0}},
-                # {'type': 'rect', 'x0': 2, 'x1': 4, 'y0': 0, 'y1': 1050, 'fillcolor': 'rgba(255, 0, 0, 0.2)', 'line': {'width': 0}},
-                # {'type': 'rect', 'x0': 2, 'x1': 4, 'y0': 0, 'y1': 1050, 'fillcolor': 'rgba(255, 0, 0, 0.2)', 'line': {'width': 0}}]
-            time_series_data[i] = [value.get("trace").get("sensors")[i].get("value") for value in records]
-            print(len(time_series_data[i]), MAX_RECORDS-1)
-            sys.stdout.flush()
-            if(len(time_series_data[i]) > MAX_RECORDS-1 and not isIsodErr):
-                for refBoxDict in redBoxes[i]:
-                    refBoxDict['x0'] = refBoxDict['x0'] - 2
-                    refBoxDict['x1'] = refBoxDict['x1'] - 2
+        for sensor in range(0,6):
+            time_series_data[sensor] = [value.get("trace").get("sensors")[sensor].get("value") for value in records]
+            time_series_anomalies[sensor] = [value.get("trace").get("sensors")[sensor].get("anomaly") for value in records]
+            traces[sensor] = dict(y=time_series_data[sensor][::-1], mode='lines', name=sensorNames[sensor], line = {'color': 'blue'})
+            redBoxes[patient_number][sensor] = [{'type': 'rect', 'x0': i, 'x1': i+1, 'y0': 0, 'y1': 1050, 'fillcolor': 'rgba(255, 0, 0, 0.6)', 'line': {'width': 0}} for i, value in enumerate(time_series_anomalies[sensor][::-1]) if value]
+            if(len(time_series_data[sensor]) > MAX_RECORDS-1 and not isIsodErr):
+                for refBoxDict in redBoxes[patient_number][sensor]:
                     if refBoxDict['x0'] < 0:
                         refBoxDict['visible'] = False
-            time_series_anomalies[i] = [value.get("trace").get("sensors")[i].get("anomaly") for value in records]
-            traces[i] = dict(y=time_series_data[i][::-1], mode='lines', name=sensorNames[i], line = {'color': 'blue'})
-            if(time_series_anomalies[i][0]):
-                redBoxes[i].append({'type': 'rect', 'x0': len(time_series_data[i]), 'x1': len(time_series_data[i])+2, 'y0': 0, 'y1': 1050, 'fillcolor': 'rgba(255, 0, 0, 0.6)', 'line': {'width': 0}})
-            figures[i] = {'data': [traces[i]], 'layout': {'title': sensorNames[i],'shapes': redBoxes[i]}}
+            figures[sensor] = {'data': [traces[sensor]], 'layout': {'title': sensorNames[sensor],'shapes': redBoxes[patient_number][sensor]}}
 
         records_copy = records 
         first_last_name = firstname + ' ' + lastname + ' ' + birthdate
         tupl = (first_last_name, figures[0], figures[1], figures[2], figures[3], figures[4], figures[5],  time_series_data[0][0], time_series_data[1][0], time_series_data[2][0], time_series_data[3][0], time_series_data[4][0], time_series_data[5][0],  time_series_anomalies[0][0], time_series_anomalies[1][0], time_series_anomalies[2][0], time_series_anomalies[3][0], time_series_anomalies[4][0], time_series_anomalies[5][0])
-        print(len(tupl))
-        sys.stdout.flush()
+        
+        # for h in range(0,6):
+        #     for s in range(0,6):
+        #         print(time_series_anomalies[h][s])
+        #         sys.stdout.flush()
+        #         print(redBoxes[patient_number][h])
+        #         sys.stdout.flush()
         return tupl
     else:
         return None
